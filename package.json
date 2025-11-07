@@ -1,0 +1,12 @@
+{
+  "name": "exam-monitor",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "exam-monitor.mjs",
+  "scripts": {
+    "start": "node exam-monitor.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
