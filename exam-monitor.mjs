@@ -2,15 +2,17 @@ import http from "http";
 import { WebSocketServer } from "ws";
 
 // --- Data stores ---
-const clients = new Map();
-const visitors = new Map();
+const clients = new Map(); // Active WebSocket clients
+const visitors = new Map(); // Visitors who loaded page but JS not active
 
 // --- HTTP server (for visit tracking + CORS) ---
 const server = http.createServer((req, res) => {
+  // ✅ Handle CORS for all requests
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
+  // Handle preflight (OPTIONS) requests
   if (req.method === "OPTIONS") {
     res.writeHead(204);
     res.end();
@@ -32,6 +34,7 @@ const server = http.createServer((req, res) => {
   }
 });
 
+// --- WebSocket server (for JS-active clients) ---
 const wss = new WebSocketServer({ server });
 
 wss.on("connection", (ws, req) => {
@@ -61,9 +64,11 @@ wss.on("connection", (ws, req) => {
   });
 });
 
+// --- Periodic Monitor ---
 setInterval(() => {
   const now = Date.now();
 
+  // 1️⃣ Users who never started JS
   for (const [id, time] of visitors.entries()) {
     if (!clients.has(id) && now - time > 2000) {
       console.warn(`🚨 User ${id} loaded page but never started JS`);
@@ -71,6 +76,7 @@ setInterval(() => {
     }
   }
 
+  // 2️⃣ Active clients — ping to check health
   for (const [id, ws] of clients.entries()) {
     if (!ws.isAlive) {
       console.warn(`⚠️ ${id} is unresponsive -> forcing logout`);
@@ -90,6 +96,8 @@ setInterval(() => {
   }
 }, 5000);
 
-server.listen(8080, () =>
-  console.log("🚀 Exam monitor running on http://localhost:8080")
-);
+// --- ✅ Start server with dynamic port for Render ---
+const PORT = process.env.PORT || 8081;
+server.listen(PORT, () => {
+  console.log(`🚀 Exam monitor running on port ${PORT}`);
+});
