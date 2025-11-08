@@ -19,6 +19,22 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ✅ Default route for Render home page
+  if (req.url === "/" || req.url === "/index" || req.url === "/index.html") {
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(`
+      <html>
+        <head><title>Exam Monitor</title></head>
+        <body style="font-family: Arial; text-align: center; padding: 40px;">
+          <h2>✅ Exam Monitor Server is Running</h2>
+          <p>WebSocket and visit tracking are active.</p>
+        </body>
+      </html>
+    `);
+    return;
+  }
+
+  // ✅ Visit tracking endpoint
   if (req.url.startsWith("/visit")) {
     const urlParams = new URLSearchParams(req.url.replace("/visit?", ""));
     const id = urlParams.get("id") || "unknown";
