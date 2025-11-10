@@ -19,7 +19,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // ✅ Default route for Render home page
+  // ✅ Home page
   if (req.url === "/" || req.url === "/index" || req.url === "/index.html") {
     res.writeHead(200, { "Content-Type": "text/html" });
     res.end(`
@@ -34,7 +34,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // ✅ Visit tracking endpoint
+  // ✅ Track visitors (when page loads)
   if (req.url.startsWith("/visit")) {
     const urlParams = new URLSearchParams(req.url.replace("/visit?", ""));
     const id = urlParams.get("id") || "unknown";
@@ -44,10 +44,33 @@ const server = http.createServer((req, res) => {
 
     res.writeHead(200, { "Content-Type": "text/plain" });
     res.end("Visit recorded");
-  } else {
-    res.writeHead(404);
-    res.end("Not found");
+    return;
   }
+
+  // ✅ Detect when JS is disabled (meta redirect)
+  if (req.url.startsWith("/js-disabled")) {
+    const urlParams = new URLSearchParams(req.url.replace("/js-disabled?", ""));
+    const id = urlParams.get("id") || "unknown";
+
+    console.warn(`🚨 JavaScript disabled for user ${id}`);
+
+    res.writeHead(200, { "Content-Type": "text/html" });
+    res.end(`
+      <html>
+        <head><title>JavaScript Disabled</title></head>
+        <body style="font-family: Arial; text-align: center; padding: 40px; background: #fff3cd;">
+          <h2>⚠️ JavaScript Disabled</h2>
+          <p>User <strong>${id}</strong> has JavaScript turned off.<br/>
+          This action is logged by the Exam Monitor.</p>
+        </body>
+      </html>
+    `);
+    return;
+  }
+
+  // 🚫 Anything else
+  res.writeHead(404);
+  res.end("Not found");
 });
 
 // --- WebSocket server (for JS-active clients) ---
